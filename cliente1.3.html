@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Cadastro de Clientes</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+            margin-bottom: 20px;
+        }
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            color: black;
+            margin-top: 0;
+        }
+        .tab button:hover {
+            background-color: #ddd;
+        }
+        .tab button.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tabcontent {
+            display: none;
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-top: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .search {
+            margin: 20px 0;
+        }
+        .export-btn {
+            background-color: #2196F3;
+            margin-right: 10px;
+        }
+        .export-btn:hover {
+            background-color: #0b7dda;
+        }
+        .delete-btn {
+            background-color: #f44336;
+            margin-left: 5px;
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        .whatsapp-btn {
+            background-color: #25D366;
+            margin-left: 5px;
+        }
+        .whatsapp-btn:hover {
+            background-color: #128C7E;
+        }
+        #qrcodeContainer {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .card {
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            transition: 0.3s;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success-message {
+            color: green;
+            font-weight: bold;
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        #birthdayMessage {
+            width: 100%;
+            height: 200px;
+            margin-top: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .message-template {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sistema de Cadastro de Clientes</h1>
+    
+    <div class="tab">
+        <button class="tablinks active" onclick="openTab(event, 'adminTab')">Administração</button>
+        <button class="tablinks" onclick="openTab(event, 'qrcodeTab')">Gerar QR Code</button>
+        <button class="tablinks" onclick="openTab(event, 'clienteTab')">Cadastro de Cliente</button>
+        <button class="tablinks" onclick="openTab(event, 'aniversariantesTab')">Aniversariantes</button>
+    </div>
+    
+    <!-- Aba de Administração -->
+    <div id="adminTab" class="tabcontent" style="display: block;">
+        <h2>Gerenciamento de Clientes</h2>
+        
+        <div class="search">
+            <div class="form-group">
+                <input type="text" id="searchInput" placeholder="Buscar cliente por nome ou telefone...">
+            </div>
+            <button class="export-btn" id="exportBtn">Exportar para CSV</button>
+            <button class="export-btn" id="aniversariantesMesBtn">Aniversariantes do Mês</button>
+        </div>
+        
+        <form id="clientForm">
+            <h3>Cadastrar Novo Cliente</h3>
+            <div class="form-group">
+                <label for="nome">Nome Completo:</label>
+                <input type="text" id="nome" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="telefone">Telefone (WhatsApp):</label>
+                <input type="tel" id="telefone" placeholder="(00) 00000-0000" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email">
+            </div>
+            
+            <div class="form-group">
+                <label for="cpf">CPF (opcional):</label>
+                <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14">
+            </div>
+            
+            <div class="form-group">
+                <label for="dataNascimento">Data de Nascimento:</label>
+                <input type="date" id="dataNascimento" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="preferencias">Preferências/Interesses:</label>
+                <input type="text" id="preferencias" placeholder="Ex: roupas esportivas, calçados, acessórios...">
+            </div>
+            
+            <div class="form-group">
+                <label for="vendedor">Vendedor (opcional):</label>
+                <select id="vendedor">
+                    <option value="">Selecione um vendedor</option>
+                    <option value="Kassio">Kassio</option>
+                    <option value="Priscila">Priscila</option>
+                    <option value="Paloma">Paloma</option>
+                    <option value="Lucas">Lucas</option>
+                </select>
+            </div>
+            
+            <button type="submit">Cadastrar Cliente</button>
+        </form>
+        
+        <table id="clientesTable">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Telefone</th>
+                    <th>Data de Nascimento</th>
+                    <th>Vendedor</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="clientesList">
+                <!-- Dados dos clientes serão inseridos aqui -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Aba de QR Code -->
+    <div id="qrcodeTab" class="tabcontent">
+        <h2>Gerar QR Code para Cadastro</h2>
+        <p>Gere um QR Code para que seus clientes possam se cadastrar diretamente pelo celular deles.</p>
+        
+        <div class="card">
+            <p>Este QR Code levará o cliente diretamente ao formulário de cadastro. Você pode imprimir e colocar no balcão da loja ou incluir em materiais promocionais.</p>
+            
+            <div id="qrcodeContainer"></div>
+            
+            <div style="text-align: center; margin-top: 15px;">
+                <button id="printQRBtn">Imprimir QR Code</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Aba de Cadastro de Cliente -->
+    <div id="clienteTab" class="tabcontent">
+        <h2>Auto-Cadastro de Cliente</h2>
+        <p>Preencha seus dados para se cadastrar em nossa loja e receber ofertas exclusivas!</p>
+        
+        <form id="clientAutoForm">
+            <div class="form-group">
+                <label for="clienteNome">Nome Completo:</label>
+                <input type="text" id="clienteNome" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="clienteTelefone">Telefone (WhatsApp):</label>
+                <input type="tel" id="clienteTelefone" placeholder="(00) 00000-0000" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="clienteEmail">E-mail:</label>
+                <input type="email" id="clienteEmail">
+            </div>
+            
+            <div class="form-group">
+                <label for="clienteCpf">CPF (opcional):</label>
+                <input type="text" id="clienteCpf" placeholder="000.000.000-00" maxlength="14">
+            </div>
+            
+            <div class="form-group">
+                <label for="clienteDataNascimento">Data de Nascimento:</label>
+                <input type="date" id="clienteDataNascimento" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="clientePreferencias">Preferências/Interesses:</label>
+                <input type="text" id="clientePreferencias" placeholder="Ex: roupas esportivas, calçados, acessórios...">
+            </div>
+            
+            <div class="form-group">
+                <label for="clienteVendedor">Vendedor (opcional):</label>
+                <select id="clienteVendedor">
+                    <option value="">Selecione um vendedor</option>
+                    <option value="Kassio">Kassio</option>
+                    <option value="Priscila">Priscila</option>
+                    <option value="Paloma">Paloma</option>
+                    <option value="Lucas">Lucas</option>
+                </select>
+            </div>
+            
+            <button type="submit">Finalizar Cadastro</button>
+        </form>
+        
+        <div id="successMessage" class="success-message">
+            Cadastro realizado com sucesso! Obrigado por se cadastrar em nossa loja.
+        </div>
+    </div>
+    
+    <!-- Aba de Aniversariantes -->
+    <div id="aniversariantesTab" class="tabcontent">
+        <h2>Aniversariantes do Mês</h2>
+        <p>Envie mensagens de parabéns e ofertas especiais para os aniversariantes do mês.</p>
+        
+        <div class="card">
+            <h3>Mensagem para Aniversariantes</h3>
+            <div class="message-template">
+                <p>A mensagem abaixo será enviada para os aniversariantes. Você pode personalizá-la se desejar:</p>
+            </div>
+            
+            <textarea id="birthdayMessage">A equipe Arena Fit deseja um feliz aniversário para você! 🎂🎊 
+
+Que este dia seja repleto de alegria, saúde e muita energia!
+
+Como nosso presente, aniversariantes do mês ganham:
+✅ 10% OFF em compras no cartão (crédito/débito);
+✅ 15% OFF no PIX;
+✅ E ainda tem o cupom ARENA15 para usar em nosso site e garantir seu desconto extra!
+
+Celebre com a gente e continue fazendo parte da família Arena Fit!
+
+Um grande abraço,
+Equipe Arena Fit
+📞 [81 99390-2872] | 📍 [Paulista North Way Shopping] | 🌐 [www.arenafitstore.com.br]</textarea>
+            
+            <button id="sendToAllBtn" class="whatsapp-btn" style="margin-top: 15px;">Enviar para Todos os Aniversariantes</button>
+        </div>
+        
+        <h3>Lista de Aniversariantes deste Mês</h3>
+        <table id="aniversariantesTable">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Telefone</th>
+                    <th>Data de Nascimento</th>
+                    <th>Vendedor</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="aniversariantesList">
+                <!-- Dados dos aniversariantes serão inseridos aqui -->
+            </tbody>
+        </table>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar QR Code
+            setupQRCode();
+            
+            // Carregar clientes salvos quando a página carregar
+            loadClientes();
+            loadAniversariantes();
+            
+            // Formatação do telefone (limita a 11 dígitos e formata)
+            document.getElementById('telefone').addEventListener('input', formatarTelefone);
+            document.getElementById('clienteTelefone').addEventListener('input', formatarTelefone);
+            
+            // Formatação do CPF
+            document.getElementById('cpf').addEventListener('input', formatarCPF);
+            document.getElementById('clienteCpf').addEventListener('input', formatarCPF);
+            
+            // Manipular envio do formulário de admin
+            document.getElementById('clientForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const cliente = {
+                    id: Date.now(), // ID único baseado no timestamp
+                    nome: document.getElementById('nome').value,
+                    telefone: document.getElementById('telefone').value,
+                    email: document.getElementById('email').value,
+                    cpf: document.getElementById('cpf').value,
+                    dataNascimento: document.getElementById('dataNascimento').value,
+                    preferencias: document.getElementById('preferencias').value,
+                    vendedor: document.getElementById('vendedor').value
+                };
+                
+                // Salvar cliente
+                saveCliente(cliente);
+                
+                // Limpar formulário
+                this.reset();
+                document.getElementById('vendedor').value = '';
+                
+                // Recarregar lista
+                loadClientes();
+                loadAniversariantes();
+            });
+            
+            // Manipular envio do formulário de auto-cadastro
+            document.getElementById('clientAutoForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const cliente = {
+                    id: Date.now(), // ID único baseado no timestamp
+                    nome: document.getElementById('clienteNome').value,
+                    telefone: document.getElementById('clienteTelefone').value,
+                    email: document.getElementById('clienteEmail').value,
+                    cpf: document.getElementById('clienteCpf').value,
+                    dataNascimento: document.getElementById('clienteDataNascimento').value,
+                    preferencias: document.getElementById('clientePreferencias').value,
+                    vendedor: document.getElementById('clienteVendedor').value
+                };
+                
+                // Salvar cliente
+                saveCliente(cliente);
+                
+                // Limpar formulário
+                this.reset();
+                document.getElementById('clienteVendedor').value = '';
+                
+                // Mostrar mensagem de sucesso
+                document.getElementById('successMessage').style.display = 'block';
+                
+                // Ocultar mensagem após 3 segundos
+                setTimeout(function() {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 3000);
+                
+                // Recarregar lista
+                loadClientes();
+                loadAniversariantes();
+            });
+            
+            // Pesquisar clientes
+            document.getElementById('searchInput').addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+                const clientes = getClientesFromStorage();
+                
+                const filteredClientes = clientes.filter(cliente => 
+                    cliente.nome.toLowerCase().includes(searchTerm) || 
+                    cliente.telefone.includes(searchTerm)
+                );
+                
+                renderClientesList(filteredClientes);
+            });
+            
+            // Exportar para CSV
+            document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+            
+            // Aniversariantes do mês
+            document.getElementById('aniversariantesMesBtn').addEventListener('click', function() {
+                showAniversariantes();
+                // Abrir a aba de aniversariantes
+                document.querySelector('.tablinks[onclick*="aniversariantesTab"]').click();
+            });
+            
+            // Enviar mensagem para todos os aniversariantes
+            document.getElementById('sendToAllBtn').addEventListener('click', function() {
+                const aniversariantes = getAniversariantes();
+                if (aniversariantes.length === 0) {
+                    alert('Não há aniversariantes neste mês para enviar mensagens.');
+                    return;
+                }
+                
+                if (confirm(`Deseja enviar a mensagem de aniversário para ${aniversariantes.length} cliente(s)?`)) {
+                    sendToAllAniversariantes();
+                }
+            });
+            
+            // Imprimir QR Code
+            document.getElementById('printQRBtn').addEventListener('click', function() {
+                const printWindow = window.open('', '_blank');
+                const qrCodeImg = document.querySelector('#qrcodeContainer img').src;
+                
+                printWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>QR Code para Cadastro</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; text-align: center; }
+                            .container { margin: 50px auto; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <h2>Cadastre-se em nossa loja!</h2>
+                            <p>Escaneie o QR Code abaixo para se cadastrar e receber ofertas exclusivas.</p>
+                            <img src="${qrCodeImg}" style="width: 250px; height: 250px;">
+                            <p>Obrigado pela preferência!</p>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(function() {
+                    printWindow.print();
+                }, 500);
+            });
+        });
+        
+        function formatarTelefone() {
+            // Remove tudo que não é dígito
+            this.value = this.value.replace(/\D/g, '');
+            
+            // Limita a 11 caracteres (DDD + número)
+            if (this.value.length > 11) {
+                this.value = this.value.substring(0, 11);
+            }
+            
+            // Formatação do telefone
+            if (this.value.length > 2) {
+                this.value = `(${this.value.substring(0, 2)}) ${this.value.substring(2)}`;
+            }
+            
+            // Limita novamente após formatação
+            if (this.value.length > 15) {
+                this.value = this.value.substring(0, 15);
+            }
+        }
+        
+        function formatarCPF() {
+            // Remove tudo que não é dígito
+            let value = this.value.replace(/\D/g, '');
+            
+            // Formatação automática do CPF
+            if (value.length > 3) {
+                value = value.substring(0, 3) + '.' + value.substring(3);
+            }
+            if (value.length > 7) {
+                value = value.substring(0, 7) + '.' + value.substring(7);
+            }
+            if (value.length > 11) {
+                value = value.substring(0, 11) + '-' + value.substring(11);
+            }
+            
+            // Limita a 14 caracteres (com pontuação)
+            if (value.length > 14) {
+                value = value.substring(0, 14);
+            }
+            
+            this.value = value;
+        }
+        
+        function setupQRCode() {
+            // Obter a URL atual da página
+            const currentUrl = window.location.href;
+            
+            // Extrair a parte base da URL (sem parâmetros de consulta)
+            const baseUrl = currentUrl.split('?')[0];
+            
+            // URL para cadastro de cliente
+            const clienteUrl = baseUrl + '?page=cliente';
+            
+            // Gerar QR Code
+            new QRCode(document.getElementById("qrcodeContainer"), {
+                text: clienteUrl,
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        function openTab(evt, tabName) {
+            // Ocultar todos os conteúdos de guias
+            const tabcontent = document.getElementsByClassName("tabcontent");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            // Remover a classe ativa de todas as guias
+            const tablinks = document.getElementsByClassName("tablinks");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            // Mostrar o conteúdo da guia atual e adicionar classe ativa
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+            
+            // Se abriu a aba de aniversariantes, recarregar a lista
+            if (tabName === 'aniversariantesTab') {
+                loadAniversariantes();
+            }
+        }
+        
+        // Verificar se há parâmetro de página na URL e abrir a aba apropriada
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const page = urlParams.get('page');
+            
+            if (page === 'cliente') {
+                // Abrir a aba de cadastro de cliente
+                document.querySelector('.tablinks[onclick*="clienteTab"]').click();
+            }
+        }
+        
+        // Funções auxiliares
+        function getClientesFromStorage() {
+            return JSON.parse(localStorage.getItem('clientes') || '[]');
+        }
+        
+        function saveCliente(cliente) {
+            const clientes = getClientesFromStorage();
+            clientes.push(cliente);
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+        }
+        
+        function deleteCliente(id) {
+            const clientes = getClientesFromStorage();
+            const updatedClientes = clientes.filter(cliente => cliente.id !== id);
+            localStorage.setItem('clientes', JSON.stringify(updatedClientes));
+            loadClientes();
+            loadAniversariantes();
+        }
+        
+        function loadClientes() {
+            const clientes = getClientesFromStorage();
+            renderClientesList(clientes);
+        }
+        
+        function renderClientesList(clientes) {
+            const clientesList = document.getElementById('clientesList');
+            clientesList.innerHTML = '';
+            
+            clientes.forEach(cliente => {
+                // Formatar data de nascimento para exibição
+                const dataNasc = new Date(cliente.dataNascimento);
+                const dataFormatada = dataNasc.toLocaleDateString('pt-BR');
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${cliente.nome}</td>
+                    <td>${cliente.telefone}</td>
+                    <td>${dataFormatada}</td>
+                    <td>${cliente.vendedor || ''}</td>
+                    <td>
+                        <button onclick="visualizarCliente(${cliente.id})">Visualizar</button>
+                        <button class="whatsapp-btn" onclick="enviarWhatsApp(${cliente.id})">WhatsApp</button>
+                        <button class="delete-btn" onclick="deleteCliente(${cliente.id})">Excluir</button>
+                    </td>
+                `;
+                clientesList.appendChild(row);
+            });
+        }
+        
+        function loadAniversariantes() {
+            const aniversariantes = getAniversariantes();
+            renderAniversariantesList(aniversariantes);
+        }
+        
+        function getAniversariantes() {
+            const clientes = getClientesFromStorage();
+            const dataAtual = new Date();
+            const mesAtual = dataAtual.getMonth() + 1;
+            
+            return clientes.filter(cliente => {
+                const dataNasc = new Date(cliente.dataNascimento);
+                const mesAniversario = dataNasc.getMonth() + 1;
+                return mesAniversario === mesAtual;
+            });
+        }
+        
+        function renderAniversariantesList(aniversariantes) {
+            const aniversariantesList = document.getElementById('aniversariantesList');
+            aniversariantesList.innerHTML = '';
+            
+            if (aniversariantes.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="5" style="text-align: center;">Não há aniversariantes neste mês.</td>`;
+                aniversariantesList.appendChild(row);
+                return;
+            }
+            
+            aniversariantes.forEach(cliente => {
+                // Formatar data de nascimento para exibição
+                const dataNasc = new Date(cliente.dataNascimento);
+                const dataFormatada = dataNasc.toLocaleDateString('pt-BR');
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${cliente.nome}</td>
+                    <td>${cliente.telefone}</td>
+                    <td>${dataFormatada}</td>
+                    <td>${cliente.vendedor || ''}</td>
+                    <td>
+                        <button class="whatsapp-btn" onclick="enviarMensagemAniversario(${cliente.id})">Enviar Mensagem</button>
+                    </td>
+                `;
+                aniversariantesList.appendChild(row);
+            });
+        }
+        
+        function visualizarCliente(id) {
+            const clientes = getClientesFromStorage();
+            const cliente = clientes.find(c => c.id === id);
+            
+            if (cliente) {
+                alert(`
+                    Nome: ${cliente.nome}
+                    Telefone: ${cliente.telefone}
+                    Email: ${cliente.email || 'Não informado'}
+                    CPF: ${cliente.cpf || 'Não informado'}
+                    Data de Nascimento: ${new Date(cliente.dataNascimento).toLocaleDateString('pt-BR')}
+                    Preferências: ${cliente.preferencias || 'Não informado'}
+                    Vendedor: ${cliente.vendedor || 'Não informado'}
+                `);
+            }
+        }
+        
+        function formatTelefone(telefone) {
+            // Remove todos os caracteres não numéricos
+            const numero = telefone.replace(/\D/g, '');
+            
+            // Verifica se o número começa com 0
+            if (numero.startsWith('0')) {
+                return numero.substring(1);
+            }
+            
+            // Verifica se tem o código do país (55)
+            if (!numero.startsWith('55')) {
+                return '55' + numero;
+            }
+            
+            return numero;
+        }
+        
+        function enviarWhatsApp(id) {
+            const clientes = getClientesFromStorage();
+            const cliente = clientes.find(c => c.id === id);
+            
+            if (cliente) {
+                const telefoneFormatado = formatTelefone(cliente.telefone);
+                let mensagem = `Olá ${cliente.nome}, tudo bem? `;
+                
+                if (cliente.vendedor) {
+                    mensagem += `\n\nAtenciosamente,\n${cliente.vendedor}\nEquipe Arena Fit`;
+                }
+                
+                const url = `https://api.whatsapp.com/send?phone=${telefoneFormatado}&text=${encodeURIComponent(mensagem)}`;
+                window.open(url, '_blank');
+            }
+        }
+        
+        function enviarMensagemAniversario(id) {
+            const clientes = getClientesFromStorage();
+            const cliente = clientes.find(c => c.id === id);
+            
+            if (cliente) {
+                const telefoneFormatado = formatTelefone(cliente.telefone);
+                const mensagem = document.getElementById('birthdayMessage').value;
+                let mensagemPersonalizada = `Olá ${cliente.nome}, \n\n${mensagem}`;
+                
+                if (cliente.vendedor) {
+                    mensagemPersonalizada += `\n\nAtenciosamente,\n${cliente.vendedor}\nEquipe Arena Fit`;
+                }
+                
+                const url = `https://api.whatsapp.com/send?phone=${telefoneFormatado}&text=${encodeURIComponent(mensagemPersonalizada)}`;
+                window.open(url, '_blank');
+            }
+        }
+        
+        function sendToAllAniversariantes() {
+            const aniversariantes = getAniversariantes();
+            const mensagem = document.getElementById('birthdayMessage').value;
+            
+            // Para evitar abrir muitas janelas ao mesmo tempo, perguntamos ao usuário
+            let mensagemEnviada = 0;
+            
+            for (const cliente of aniversariantes) {
+                const telefoneFormatado = formatTelefone(cliente.telefone);
+                let mensagemPersonalizada = `Olá ${cliente.nome}, \n\n${mensagem}`;
+                
+                if (cliente.vendedor) {
+                    mensagemPersonalizada += `\n\nAtenciosamente,\n${cliente.vendedor}\nEquipe Arena Fit`;
+                }
+                
+                const url = `https://api.whatsapp.com/send?phone=${telefoneFormatado}&text=${encodeURIComponent(mensagemPersonalizada)}`;
+                
+                setTimeout(() => {
+                    window.open(url, '_blank');
+                    mensagemEnviada++;
+                    
+                    if (mensagemEnviada === aniversariantes.length) {
+                        alert(`Mensagens enviadas para ${mensagemEnviada} aniversariantes com sucesso!`);
+                    }
+                }, mensagemEnviada * 1000); // Abre uma janela por segundo para evitar bloqueios do navegador
+            }
+        }
+        
+        function exportToCSV() {
+            const clientes = getClientesFromStorage();
+            
+            if (clientes.length === 0) {
+                alert('Não há clientes cadastrados para exportar.');
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Nome,Telefone,Email,CPF,Data de Nascimento,Preferências,Vendedor\n";
+            
+            clientes.forEach(cliente => {
+                csvContent += `"${cliente.nome}","${cliente.telefone}","${cliente.email || ''}","${cliente.cpf || ''}","${cliente.dataNascimento}","${cliente.preferencias || ''}","${cliente.vendedor || ''}"\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "clientes.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        function showAniversariantes() {
+            const aniversariantes = getAniversariantes();
+            
+            if (aniversariantes.length === 0) {
+                alert('Não há aniversariantes neste mês.');
+            } else {
+                renderClientesList(aniversariantes);
+            }
+        }
+        
+        // Verificar parâmetros URL ao carregar
+        window.onload = checkUrlParams;
+        
+        // Funções globais que precisam ser acessadas pelo HTML
+        window.deleteCliente = deleteCliente;
+        window.visualizarCliente = visualizarCliente;
+        window.enviarWhatsApp = enviarWhatsApp;
+        window.enviarMensagemAniversario = enviarMensagemAniversario;
+        window.openTab = openTab;
+    </script>
+</body>
+</html>
